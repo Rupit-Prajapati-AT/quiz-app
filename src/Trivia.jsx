@@ -28,7 +28,7 @@ const Trivia = () => {
   }, [currentQuestion, question]);
   const getQuestion = async (retryCount = 3) => {
     try {
-      const response = await fetch(`https://opentdb.com/api.php?amount=3`);
+      const response = await fetch(`https://opentdb.com/api.php?amount=10`);
       var data = await response.json();
       if (data.response_code === 0) {
         setQuestion(data.results);
