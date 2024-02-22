@@ -10,7 +10,6 @@ import {
   Text,
 } from "@chakra-ui/react";
 const Trivia = () => {
-  const [loading, setLoading] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [value, setValue] = useState("");
   const [error, setError] = useState(null);
@@ -22,19 +21,17 @@ const Trivia = () => {
 
   useEffect(() => {
     getQuestion();
-  }, [currentQuestion]);
+  }, []);
 
   useEffect(() => {
     shuffleAnswers();
   }, [currentQuestion, question]);
   const getQuestion = async (retryCount = 3) => {
-    setLoading(true);
     try {
-      const response = await fetch(`https://opentdb.com/api.php?amount=1`);
+      const response = await fetch(`https://opentdb.com/api.php?amount=3`);
       var data = await response.json();
       if (data.response_code === 0) {
         setQuestion(data.results);
-        setLoading(false);
       }
     } catch (error) {
       throw new Error();
@@ -57,23 +54,22 @@ const Trivia = () => {
     var attempted = [...attemptQuestions, QNA];
     setAttemptQuestions(attempted);
 
-    const interval = setInterval(async () => {
+    const interval = setInterval(() => {
       if (question.length === no + 1) {
-        // setShowResults(true);
+        setShowResults(true);
       } else {
+        setCurrentQuestion((prevCurrentQuestion) => prevCurrentQuestion + 1);
+        setError(null);
+        setValue("");
       }
-      setCurrentQuestion((prevCurrentQuestion) => prevCurrentQuestion + 1);
-      setError(null);
-      setValue("");
-      await getQuestion();
       clearInterval(interval);
     }, 1000);
   };
   const shuffleAnswers = () => {
     if (question) {
       const allAnswers = [
-        question[0].correct_answer,
-        ...question[0].incorrect_answers,
+        question[currentQuestion].correct_answer,
+        ...question[currentQuestion].incorrect_answers,
       ];
 
       for (let i = allAnswers.length - 1; i > 0; i--) {
@@ -100,7 +96,7 @@ const Trivia = () => {
               return (
                 <Box key={index}>
                   <Heading as="h3" size="md" paddingBottom={1}>
-                    {attempt.question}
+                    {index + 1}. {attempt.question}
                   </Heading>
                   <Text color="green" fontSize="xl">
                     Correct Answer : {attempt.correctAnswer}
@@ -126,60 +122,55 @@ const Trivia = () => {
         </>
       ) : (
         <>
-          {loading ? (
-            "loading"
-          ) : (
+          {question ? (
             <>
-              {question ? (
-                <>
-                  <Heading as="h3" size="md" paddingBottom={3}>
-                    {(question[0].question = he.decode(question[0].question))}
-                  </Heading>
-                  <>
-                    <RadioGroup onChange={setValue} value={value}>
-                      <Stack direction="column">
-                        {shuffledAnswers &&
-                          shuffledAnswers.map((ans, index) => {
-                            return (
-                              <Radio
-                                colorScheme={
-                                  error === null
-                                    ? "blue"
-                                    : error
-                                    ? "green"
-                                    : "red"
-                                }
-                                key={index}
-                                value={he.decode(ans)}
-                              >
-                                {he.decode(ans)}
-                              </Radio>
-                            );
-                          })}
-                      </Stack>
-                    </RadioGroup>
-                  </>
-                  {/* <input value={answer} type="text" onChange={(e)=>setAnswer(e.target.value)} />*/}
-                  <Button
-                    onClick={() => checkAnswer(0)}
-                    marginTop={5}
-                    isDisabled={value === "" ? true : error ? true : false}
-                    colorScheme="blue"
-                  >
-                    Submit
-                  </Button>
-                  <Text
-                    color={error ? "green" : "red"}
-                    fontSize="xl"
-                    paddingBottom={5}
-                  >
-                    {error === null ? "" : error ? "Correct" : "InCorrect"}
-                  </Text>
-                </>
-              ) : (
-                ""
-              )}
+              <Heading as="h3" size="md" paddingBottom={3}>
+                {currentQuestion + 1}.{" "}
+                {
+                  (question[currentQuestion].question = he.decode(
+                    question[currentQuestion].question
+                  ))
+                }
+              </Heading>
+              <>
+                <RadioGroup onChange={setValue} value={value}>
+                  <Stack direction="column">
+                    {shuffledAnswers &&
+                      shuffledAnswers.map((ans, index) => {
+                        return (
+                          <Radio
+                            colorScheme={
+                              error === null ? "blue" : error ? "green" : "red"
+                            }
+                            key={index}
+                            value={he.decode(ans)}
+                          >
+                            {he.decode(ans)}
+                          </Radio>
+                        );
+                      })}
+                  </Stack>
+                </RadioGroup>
+              </>
+              {/* <input value={answer} type="text" onChange={(e)=>setAnswer(e.target.value)} />*/}
+              <Button
+                onClick={() => checkAnswer(currentQuestion)}
+                marginTop={5}
+                isDisabled={value === "" ? true : error ? true : false}
+                colorScheme="blue"
+              >
+                Submit
+              </Button>
+              <Text
+                color={error ? "green" : "red"}
+                fontSize="xl"
+                paddingBottom={5}
+              >
+                {error === null ? "" : error ? "Correct" : "InCorrect"}
+              </Text>
             </>
+          ) : (
+            ""
           )}
         </>
       )}
